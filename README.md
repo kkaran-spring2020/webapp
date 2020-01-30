@@ -1,4 +1,4 @@
-# CSYE 6225 - Fall 2019
+# CSYE 6225 - Fall 2020
 
 ## Information
 
