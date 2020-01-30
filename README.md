@@ -56,7 +56,8 @@ Pre-req : Need POSTMAN and MariaDB installed.
             
 ## Running Tests
 
-    * Implemented Junit using Mocha chai for unit testing for creation of user.
+    * Used Mocha chai for unit testing for creation of user.
     * Run Application using "Run All Tests"
 
 ## CI/CD
+   * Used CircleCI for continous integration and testing
