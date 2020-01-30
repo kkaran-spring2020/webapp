@@ -10,7 +10,7 @@ describe("Login", () => {
         it('it should validate user if correct, return current date', (done) => {
             chai.request(app)
                 .get('/v1/user/self')
-                .set("Authorization", "basic " + new Buffer("karan@example.com:Abcd1234!").toString("base64"))
+                .set("Authorization", "basic " + new Buffer("karan@example.com:Abcd1234!").toString())
                 .end((err, res) => {
                     res.should.have.status(200);
                     res.body.should.be.a('object');
