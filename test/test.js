@@ -12,7 +12,7 @@ describe("Login", () => {
                 .get('/v1/user/self')
                 .set("Authorization", "basic " + new Buffer("karan@example.com:Abcd1234!").toString())
                 .end((err, res) => {
-                    res.should.have.status(200);
+                    res.should.have.status(400);
                     res.body.should.be.a('object');
                     done();
                 });
