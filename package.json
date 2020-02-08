@@ -4,7 +4,7 @@
   "description": "cloud assignment 3",
   "main": "server.js",
   "scripts": {
-    "test": "mocha--exit"
+    "test": "mocha --exit"
   },
   "keywords": [],
   "author": "Karan",
