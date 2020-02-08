@@ -38,7 +38,7 @@ jobs:
           MYSQL_ROOT_PASSWORD: rootpw
           MYSQL_DATABASE: test_db
           MYSQL_USER: user
-          MYSQL_PASSWORD: 
+          MYSQL_PASSWORD: passw0rd 
     steps:
       - checkout
       - run:
