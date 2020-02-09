@@ -11,6 +11,7 @@ jobs:
           MYSQL_PASSWORD: passw0rd
     steps:
       - checkout
+      - run: apt-get install python-pip
       - run: pip install flup==1.0.2
       - run:
       # Our primary container isn't MYSQL so run a sleep command until it's ready.
