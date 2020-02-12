@@ -16,6 +16,7 @@
 ## Build Instructions
 
 Pre-req : Need POSTMAN and MySQL installed.
+
     * Fork repository https://github.com/karank-spring2020/webapp.git 
     
     * Navigate to webapp directory
