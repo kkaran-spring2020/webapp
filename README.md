@@ -17,8 +17,11 @@
 
 Pre-req : Need POSTMAN and MySQL installed.
     * Fork repository https://github.com/karank-spring2020/webapp.git 
+    
     * Navigate to webapp directory
+    
     * Run "npm install" command on terminal to install dependencies
+    
     * Run "npm test" command on terminal to test test cases
 
 ## Deploy Instructions
