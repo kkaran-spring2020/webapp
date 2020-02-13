@@ -1,14 +1,14 @@
 const Sequelize = require('sequelize');
 
 const sequelize = new Sequelize(
-  'test_db',
+  'cloud',
   'root',
-  'rootpw',
+  'Vinay@1996',
   {
     host: 'localhost',
     port: 3306,
     dialect: 'mysql',
-    //storage: 'app.db'
+    //storage: 'ka.db'
   }
 );
 
@@ -68,6 +68,8 @@ Bill.init(
       type: Sequelize.DATE,
       allowNull: false
     },
+
+
     payment_status: {
       type: Sequelize.ENUM({
         values: [
@@ -80,11 +82,14 @@ Bill.init(
       allowNull: false
     },
     categories: {
-      type: Sequelize.JSON
-    },
+          type: Sequelize.JSON
+      },
+      attachment: {
+          type: Sequelize.JSON
+      },
     amount_due: {
       type: Sequelize.DOUBLE,
-      validate: { min: 0.01, max: 1000000 },
+      validate: { min: 0.01, max: 200000 },
       allowNull: false
     }
   },
@@ -96,9 +101,52 @@ Bill.init(
   }
 );
 User.hasMany(Bill, { as: 'bills' });
+class AttachFile extends Sequelize.Model {}
+
+AttachFile.init(
+  {
+      id: {
+      type: Sequelize.UUID,
+      allowNull: false,
+      primaryKey: true
+    },
+    file_name: {
+      type: Sequelize.STRING,
+      allowNull: false
+    },
+      size: {
+      type: Sequelize.STRING,
+      allowNull: false
+    },
+    md5: {
+      type: Sequelize.STRING,
+      allowNull: false
+    },
+    mime_type: {
+      type: Sequelize.STRING,
+      allowNull: false
+    },
+      url: {
+          type: Sequelize.STRING,
+          allowNull: false
+      },
+      upload_date: {
+          type: Sequelize.DATE,
+          allowNull: false
+      }
+  },
+  {
+    sequelize,
+    timestamps: false
+
+  }
+);
+
+Bill.hasOne(AttachFile);
+
 const init = async () => {
   await sequelize.authenticate();
   await sequelize.sync();
 };
 
-module.exports = { User, Bill, init };
+module.exports = { User, Bill, AttachFile, init };
