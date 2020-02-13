@@ -6,7 +6,7 @@ const mime = require('mime');
 var dateformat = require("dateformat");
 
 module.exports = function(app) {
-  const { Bill, User, AttachFile } = require('../database');
+  const { Bill, User, AttachFile } = require('../db');
 
   app.post('/v1/bill/:id/file', async (req, res) => {
     try {
