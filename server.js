@@ -29,4 +29,6 @@ app.use(function (err, req, res, next) {
     next(err)
 })
 
+module.exports = app;
+
 
