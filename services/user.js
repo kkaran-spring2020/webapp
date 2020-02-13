@@ -1,20 +1,20 @@
 const Sequelize = require('sequelize');
 const utils = require('../utils');
 const uuidv4 = require('uuidv4');
+const bcrypt = require('bcrypt');
 
 module.exports = function(app) {
-  const { User } = require('../db');
+  const { User } = require('../database');
   app.post('/v1/user', async (req, res) => {
     try {
-      utils.checkPasswordStrength(req.body.password);
-      const password = utils.getPasswordHash(
-        req.body.password
-      );
+      utils.PasswordStrength(req.body.password);
+      const hash = await bcrypt.hash(req.body.password, 10);
+
       let users = await User.create({
         id: uuidv4.uuid(),
         first_name: req.body.first_name,
         last_name: req.body.last_name,
-        password,
+        password:hash,
         email_address: req.body.email_address
       });
       users = users.toJSON();
@@ -51,10 +51,9 @@ module.exports = function(app) {
         user.last_name = req.body.last_name;
       }
       if (req.body.password) {
-        utils.checkPasswordStrength(req.body.password);
-        user.password = utils.getPasswordHash(
-          req.body.password
-        );
+        utils.PasswordStrength(req.body.password);
+        user.password = await bcrypt.hash(req.body.password, 10);
+
       }
       await user.save();
       res.status(204).send();
