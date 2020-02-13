@@ -1,22 +1,32 @@
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
-const db = require('./db');
+const database = require('./database');
 const userService = require('./services/user');
 const billService = require('./services/bill');
-db.init();
+const attachmentService = require('./services/attachFile');
+const fileUpload = require('express-fileupload');
+
+database.init();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(fileUpload());
 
 userService(app);
 billService(app);
+attachmentService(app);
 
-var server = app.listen(
-  process.env.PORT || 6000,
+var main = app.listen(
+  process.env.PORT || 3006,
   function() {
-    var port = server.address().port;
+    var port = main.address().port;
     console.log('Running on port: ', port);
   }
 );
 
-module.exports = app;
+app.use(function (err, req, res, next) {
+    console.log('This is the invalid field ->', err.field)
+    next(err)
+})
+
+

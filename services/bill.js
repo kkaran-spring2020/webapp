@@ -2,8 +2,9 @@ const Sequelize = require('sequelize');
 const utils = require('../utils');
 const uuidv4 = require('uuidv4');
 
+
 module.exports = function(app) {
-  const { Bill, User } = require('../db');
+  const { Bill, User ,AttachFile } = require('../database');
 
   app.post('/v1/bill', async (req, res) => {
     try {
@@ -16,7 +17,8 @@ module.exports = function(app) {
         due_date: req.body.due_date,
         amount_due: req.body.amount_due,
         payment_status: req.body.payment_status,
-        categories: req.body.categories
+        categories: req.body.categories,
+        attachment: {}
       });
 
       await user.addBill(bill);
@@ -37,6 +39,8 @@ module.exports = function(app) {
         User
       );
       const bills = await user.getBills();
+
+
       res.status(200).send(bills);
     } catch (e) {
       res.status(400).send(e.toString());
@@ -49,13 +53,26 @@ module.exports = function(app) {
         req,
         User
       );
+      const id = req.params.id;
       const bills = await user.getBills({
-        where: { id: req.params.id }
+        where: { id: req.params.id}
       });
       if (bills.length == 0) {
         throw new Error('Invalid Bill Id');
       }
-      res.status(200).send(bills[0]);
+      bill = bills[0];
+
+      const file = await AttachFile.findOne({
+        where: {BillId: req.params.id}
+      });
+
+      const attachment = await Bill.update(
+          {attachment : file},
+          {where: {id: req.params.id}}
+    );
+
+      billTable = bill.dataValues;
+      res.status(200).send(billTable);
     } catch (e) {
       res.status(400).send(e.toString());
     }
@@ -76,7 +93,9 @@ module.exports = function(app) {
       const bill = bills[0];
 
       await user.removeBill(bill);
-      await bill.destroy();
+      await Bill.destroy({
+        where:{id: req.params.id}
+      });
       res.status(204).send();
     } catch (e) {
       res.status(400).send(e.toString());
@@ -106,7 +125,10 @@ module.exports = function(app) {
       if (req.body.due_date) {
         bill.due_date = req.body.due_date;
       }
-      if (req.body.amount_due) {
+      if (req.body.amount_due< 0.01) {
+        throw new Error("Amount can't be less than 0.01")
+      }
+      else{
         bill.amount_due = req.body.amount_due;
       }
       if (req.body.payment_status) {
