@@ -4,7 +4,7 @@ const uuidv4 = require('uuidv4');
 
 
 module.exports = function(app) {
-  const { Bill, User ,AttachFile } = require('../database');
+  const { Bill, User ,AttachFile } = require('../db');
 
   app.post('/v1/bill', async (req, res) => {
     try {
