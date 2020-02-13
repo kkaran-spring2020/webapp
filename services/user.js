@@ -4,7 +4,7 @@ const uuidv4 = require('uuidv4');
 const bcrypt = require('bcrypt');
 
 module.exports = function(app) {
-  const { User } = require('../database');
+  const { User } = require('../db');
   app.post('/v1/user', async (req, res) => {
     try {
       utils.PasswordStrength(req.body.password);
