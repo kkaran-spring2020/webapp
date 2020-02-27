@@ -25,6 +25,7 @@ jobs:
       - run:
           name: Install MySQL CLI; Import dummy data; run an example query
           command: |
+            sudo apt-get update
             sudo apt-get install default-mysql-client
             mysql -h 127.0.0.1 -u user -ppassw0rd test_db < dummy.sql
             mysql -h 127.0.0.1 -u user -ppassw0rd --execute="SELECT * FROM test_db.Persons"
@@ -42,7 +43,7 @@ jobs:
     steps:
       - checkout
       - run:
-      # Our primary container isn't MYSQL so run a sleep command until it's ready.
+      # Our primary container isn't MYSQL so run a sleep command until it's ready again.
           name: Waiting for MySQL to be ready
           command: |
             for i in `seq 1 10`;
