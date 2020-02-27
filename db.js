@@ -1,18 +1,26 @@
 const Sequelize = require('sequelize');
+require('dotenv').config();
 
 const sequelize = new Sequelize(
-  'cloud',
-  'root',
-  'Vinay@1996',
+  'csye6225',
+  process.env.DB_USERNAME,
+  process.env.DB_PASSWORD,
   {
-    host: 'localhost',
+    host: process.env.DB_HOSTNAME,
     port: 3306,
     dialect: 'mysql',
+    logging: console.log,
+    maxConcurrentQueries: 100,
+    dialectOptions: {
+      ssl: 'Amazon RDS'
+    },
+    pool: { maxConnections: 5, maxIdleTime: 30 },
+    language: 'en'
     //storage: 'ka.db'
   }
 );
 
-class User extends Sequelize.Model {}
+class User extends Sequelize.Model { }
 
 User.init(
   {
@@ -47,7 +55,7 @@ User.init(
   }
 );
 
-class Bill extends Sequelize.Model {}
+class Bill extends Sequelize.Model { }
 
 Bill.init(
   {
@@ -82,16 +90,17 @@ Bill.init(
       allowNull: false
     },
     categories: {
-          type: Sequelize.JSON
-      },
-      attachment: {
-          type: Sequelize.JSON
-      },
+      type: Sequelize.JSON
+    },
+    attachment: {
+      type: Sequelize.JSON
+    },
     amount_due: {
       type: Sequelize.DOUBLE,
       validate: { min: 0.01, max: 200000 },
       allowNull: false
-    }
+    },
+    //onDelete: 'CASCADE',
   },
   {
     sequelize,
@@ -101,11 +110,11 @@ Bill.init(
   }
 );
 User.hasMany(Bill, { as: 'bills' });
-class AttachFile extends Sequelize.Model {}
+class AttachFile extends Sequelize.Model { }
 
 AttachFile.init(
   {
-      id: {
+    id: {
       type: Sequelize.UUID,
       allowNull: false,
       primaryKey: true
@@ -114,7 +123,7 @@ AttachFile.init(
       type: Sequelize.STRING,
       allowNull: false
     },
-      size: {
+    size: {
       type: Sequelize.STRING,
       allowNull: false
     },
@@ -126,14 +135,14 @@ AttachFile.init(
       type: Sequelize.STRING,
       allowNull: false
     },
-      url: {
-          type: Sequelize.STRING,
-          allowNull: false
-      },
-      upload_date: {
-          type: Sequelize.DATE,
-          allowNull: false
-      }
+    url: {
+      type: Sequelize.STRING,
+      allowNull: false
+    },
+    upload_date: {
+      type: Sequelize.DATE,
+      allowNull: false
+    }
   },
   {
     sequelize,
@@ -142,7 +151,7 @@ AttachFile.init(
   }
 );
 
-Bill.hasOne(AttachFile);
+Bill.hasOne(AttachFile, { onDelete: "cascade" });
 
 const init = async () => {
   await sequelize.authenticate();

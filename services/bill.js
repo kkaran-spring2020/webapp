@@ -1,10 +1,20 @@
 const Sequelize = require('sequelize');
 const utils = require('../utils');
 const uuidv4 = require('uuidv4');
+const fs = require('fs');
+const AWS = require('aws-sdk');
+require('dotenv').config();
 
 
-module.exports = function(app) {
-  const { Bill, User ,AttachFile } = require('../db');
+
+module.exports = function (app) {
+
+  const s3 = new AWS.S3({
+    accessKeyId: process.env.AWS_ACCESS_KEY,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  });
+
+  const { Bill, User, AttachFile } = require('../db');
 
   app.post('/v1/bill', async (req, res) => {
     try {
@@ -55,7 +65,7 @@ module.exports = function(app) {
       );
       const id = req.params.id;
       const bills = await user.getBills({
-        where: { id: req.params.id}
+        where: { id: req.params.id }
       });
       if (bills.length == 0) {
         throw new Error('Invalid Bill Id');
@@ -63,13 +73,13 @@ module.exports = function(app) {
       bill = bills[0];
 
       const file = await AttachFile.findOne({
-        where: {BillId: req.params.id}
+        where: { BillId: req.params.id }
       });
 
       const attachment = await Bill.update(
-          {attachment : file},
-          {where: {id: req.params.id}}
-    );
+        { attachment: file },
+        { where: { id: req.params.id } }
+      );
 
       billTable = bill.dataValues;
       res.status(200).send(billTable);
@@ -91,11 +101,50 @@ module.exports = function(app) {
         throw new Error('Invalid Bill Id');
       }
       const bill = bills[0];
+      //karan
+      const attachments = await bill.getAttachFile({
+        where: { billId: req.params.id }
+      });
+      console.log("******" + attachments);
+      //karan
+
+      if (attachments != null) {
+
+
+        var details = {
+          Bucket: process.env.S3BUCKET,
+          Delete: {
+            Objects: [
+              {
+                Key: req.params.id + "_" + attachments.file_name // required
+              }
+            ],
+          },
+        };
+
+        s3.deleteObjects(details, function (error, data) {
+          if (error) console.log(error, error.stack);
+          else console.log('delete', data);
+        });
+      }
 
       await user.removeBill(bill);
       await Bill.destroy({
-        where:{id: req.params.id}
+        where: { id: req.params.id }
       });
+      //karan
+      // const attachments = await bill.getAttachFile({
+      //   where: { billId: req.params.id }
+      // });
+      // console.log("******"+attachments);
+
+      await AttachFile.destroy({
+        where: { BillId: req.params.id }
+      });
+
+
+
+      //karan
       res.status(204).send();
     } catch (e) {
       res.status(400).send(e.toString());
@@ -125,10 +174,10 @@ module.exports = function(app) {
       if (req.body.due_date) {
         bill.due_date = req.body.due_date;
       }
-      if (req.body.amount_due< 0.01) {
+      if (req.body.amount_due < 0.01) {
         throw new Error("Amount can't be less than 0.01")
       }
-      else{
+      else {
         bill.amount_due = req.body.amount_due;
       }
       if (req.body.payment_status) {
