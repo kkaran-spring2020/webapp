@@ -7,11 +7,13 @@
 | Karan | 001449291 | Karan.k@husky.neu.edu |
 | | | |
 
+
 ## Technology Stack
 
 * Backend Technology: Node JS
 * Framework: Express
-* Database: MySQL
+* Database: MySQL(RDS)
+* S3 bucket- User's attachment is stored in S3 bucket instead of local disk.
 
 ## Build Instructions
 
