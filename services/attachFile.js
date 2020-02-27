@@ -3,10 +3,21 @@ const utils = require('../utils');
 const uuidv4 = require('uuidv4');
 const fs = require('fs');
 const mime = require('mime');
+const AWS = require('aws-sdk')
+require('dotenv').config();
 var dateformat = require("dateformat");
 
-module.exports = function(app) {
+
+
+module.exports = function (app) {
+
   const { Bill, User, AttachFile } = require('../db');
+
+  const s3 = new AWS.S3({
+    accessKeyId: process.env.AWS_ACCESS_KEY,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  });
+
 
   app.post('/v1/bill/:id/file', async (req, res) => {
     try {
@@ -27,20 +38,36 @@ module.exports = function(app) {
         throw new Error('Invalid Bill Id');
       }
       const attachments = await AttachFile.findAll({
-        where: {BillId: req.params.id}
+        where: { BillId: req.params.id }
       });
 
-      if( attachments.length !=0) {
-        throw  new Error("BillId already exists");
+      if (attachments.length != 0) {
+        throw new Error("BillId already exists");
       }
       const uuid = uuidv4.uuid();
       let extension = mime.getExtension(req.files.attachment.mimetype);
 
-      if (extension== 'pdf' || extension == 'jpeg' || extension == 'jpg' || extension == 'png') {
+      if (extension == 'pdf' || extension == 'jpeg' || extension == 'jpg' || extension == 'png') {
 
-        await req.files.attachment.mv(
-            `${__dirname}/../uploads/${req.params.id}${req.files.attachment.name}`
-        );
+        params = {
+          Bucket: process.env.S3BUCKET,
+          Key: req.params.id + "_" + req.files.attachment.name,
+          Body: JSON.stringify(req.files.attachment)
+        };
+
+
+        s3.putObject(params, function (err, data) {
+          if (err) {
+            console.log(err)
+          } else {
+            console.log("Successfully uploaded data to Bucket/Key");
+          }
+
+        });
+
+        // await req.files.attachment.mv(
+        //     `${__dirname}/../uploads/${req.params.id}${req.files.attachment.name}`
+        // );
 
         let fileMetadata = await AttachFile.create({
           id: uuid,
@@ -49,26 +76,26 @@ module.exports = function(app) {
           size: req.files.attachment.size,
           md5: req.files.attachment.md5,
           upload_date: dateformat(new Date(), "yyyy-mm-dd"),
-          url: 'uploads' + '/' + req.params.id + req.files.attachment.name
+          url: "https://" + process.env.S3BUCKET + ".s3.amazonaws.com" + "/" + req.params.id + "_" + req.files.attachment.name
         });
 
         const fileUpload = {
           id: uuid,
           file_name: req.files.attachment.name,
-          url: 'uploads' + '/' + req.params.id + req.files.attachment.name,
+          url: "https://" + process.env.S3_BUCKET_NAME + ".s3.amazonaws.com" + "/" + req.params.id + "_" + req.files.attachment.name,
           upload_date: dateformat(new Date(), "yyyy-mm-dd")
         };
 
         await Bill.update(
-        {attachment : fileUpload},
-        {where: {id: req.params.id}}
+          { attachment: fileUpload },
+          { where: { id: req.params.id } }
 
         );
 
         await bill.setAttachFile(fileMetadata);
         res.status(201).send(fileUpload);
-      }else{
-        throw  new Error("Invalid Extension of attachment");
+      } else {
+        throw new Error("Invalid Extension of attachment");
       }
 
     } catch (error) {
@@ -81,78 +108,91 @@ module.exports = function(app) {
   });
 
   app.get(
-      '/v1/bill/:billId/file/:fileId',
-      async (req, res) => {
-        try {
-          const user = await utils.validateAndGetUser(
-              req,
-              User
-          );
-          const bills = await user.getBills({
-            where: { id: req.params.billId }
-          });
-          if (bills.length == 0) {
-            throw new Error('Invalid Bill Id');
-          }
-          const bill = bills[0];
-          const attachments = await bill.AttachFile({
-            where: { id: req.params.fileId }
-          });
-
-          const fileupload={
-            id:req.params.fileId,
-            file_name:attachments.file_name,
-            url:attachments.url,
-            upload_date:dateformat(attachments.upload_date,"yyyy-mm-dd")
-
-          }
-          if (attachments.length == 0) {
-            throw new Error('Invalid Attachment Id');
-          }
-          res.status(200).send(fileupload);
-        } catch (e) {
-          res.status(400).send(e.toString());
+    '/v1/bill/:billId/file/:fileId',
+    async (req, res) => {
+      try {
+        const user = await utils.validateAndGetUser(
+          req,
+          User
+        );
+        const bills = await user.getBills({
+          where: { id: req.params.billId }
+        });
+        if (bills.length == 0) {
+          throw new Error('Invalid Bill Id');
         }
+        const bill = bills[0];
+        const attachments = await bill.getAttachFile({
+          where: { id: req.params.fileId }
+        });
+
+        const fileupload = {
+          id: req.params.fileId,
+          file_name: attachments.file_name,
+          url: attachments.url,
+          upload_date: dateformat(attachments.upload_date, "yyyy-mm-dd")
+
+        }
+        if (attachments.length == 0) {
+          throw new Error('Invalid Attachment Id');
+        }
+        res.status(200).send(fileupload);
+      } catch (e) {
+        res.status(400).send(e.toString());
       }
+    }
   );
 
   app.delete(
-      '/v1/bill/:billId/file/:fileId',
-      async (req, res) => {
-        try {
-          const user = await utils.validateAndGetUser(
-              req,
-              User
-          );
-          const bills = await user.getBills({
-            where: { id: req.params.billId }
-          });
-          if (bills.length == 0) {
-            throw new Error('Invalid Bill Id');
-          }
-          const bill = bills[0];
-          const attachments = await bill.getAttachFile({
-            where: { id: req.params.fileId }
-          });
-          if (attachments.length == 0) {
-            throw new Error('Invalid Attachment Id');
-          }
-          await fs.promises.unlink(
-              `${__dirname}/../uploads/${req.params.billId}${attachments.dataValues.file_name}`
-          );
-
-          await AttachFile.destroy({
-          where: {BillId: req.params.billId}
-
-          });
-          await Bill.update(
-              {attachment : { }},
-              {where: {id: req.params.billId}}
-          );
-          res.status(204).send();
-        } catch (e) {
-          res.status(400).send(e.toString());
+    '/v1/bill/:billId/file/:fileId',
+    async (req, res) => {
+      try {
+        const user = await utils.validateAndGetUser(
+          req,
+          User
+        );
+        const bills = await user.getBills({
+          where: { id: req.params.billId }
+        });
+        if (bills.length == 0) {
+          throw new Error('Invalid Bill Id');
         }
+        const bill = bills[0];
+        const attachments = await bill.getAttachFile({
+          where: { id: req.params.fileId }
+        });
+        if (attachments.length == 0) {
+          throw new Error('Invalid Attachment Id');
+        }
+
+        var params = {
+          Bucket: process.env.S3BUCKET,
+          Delete: {
+            Objects: [
+              {
+                Key: req.params.billId + "_" + attachments.file_name // required
+              }
+            ],
+          },
+        };
+
+        s3.deleteObjects(params, function (err, data) {
+          if (err) console.log(err, err.stack);
+          else console.log('delete', data);
+        });
+
+        await AttachFile.destroy({
+          where: { BillId: req.params.billId }
+
+        });
+        await Bill.update(
+          { attachment: {} },
+          { where: { id: req.params.billId } }
+        );
+        res.status(204).send();
+      } catch (e) {
+        res.status(400).send(e.toString());
+      }
     }
   );
 };

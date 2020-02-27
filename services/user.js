@@ -3,7 +3,7 @@ const utils = require('../utils');
 const uuidv4 = require('uuidv4');
 const bcrypt = require('bcrypt');
 
-module.exports = function(app) {
+module.exports = function (app) {
   const { User } = require('../db');
   app.post('/v1/user', async (req, res) => {
     try {
@@ -14,7 +14,7 @@ module.exports = function(app) {
         id: uuidv4.uuid(),
         first_name: req.body.first_name,
         last_name: req.body.last_name,
-        password:hash,
+        password: hash,
         email_address: req.body.email_address
       });
       users = users.toJSON();
