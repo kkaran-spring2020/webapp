@@ -29,36 +29,57 @@ jobs:
             sudo apt-get install default-mysql-client
             mysql -h 127.0.0.1 -u user -ppassw0rd test_db < dummy.sql
             mysql -h 127.0.0.1 -u user -ppassw0rd --execute="SELECT * FROM test_db.Persons"
-      - run: npm install
-      - run: npm test    
+            
+      - run: 
+          command: |
+            cd webapp/
+            npm install
+      - run:
+          command: |
+            cd webapp/
+            npm test
   build:
     docker:
-      - image: circleci/node:12.13.0
-      - image: circleci/mysql:5.7
+      - image: circleci/python:3.6-jessie
         environment:
           MYSQL_ROOT_PASSWORD: rootpw
           MYSQL_DATABASE: test_db
           MYSQL_USER: user
-          MYSQL_PASSWORD: passw0rd 
+          MYSQL_PASSWORD: 
     steps:
       - checkout
       - run:
-      # Our primary container isn't MYSQL so run a sleep command until it's ready again.
-          name: Waiting for MySQL to be ready
           command: |
-            for i in `seq 1 10`;
-            do
-              nc -z 127.0.0.1 3306 && echo Success && exit 0
-              echo -n .
-              sleep 1
-            done
-            echo Failed waiting for MySQL && exit 1
+              sudo apt-get update && sudo apt-get install wget zip unzip
+              python3 -m venv venv
+              . venv/bin/activate
+          name: "Install packages"
+          
       - run:
-          name: Install MySQL CLI; Import dummy data; run an example query
+          name: install awscli
+          command: sudo pip install awscli
+          
+      - 
+        run: 
           command: |
-            sudo apt-get update
-            sudo apt-get install default-mysql-client
-      - run: npm install
+              pwd
+              mkdir -p codedeploy_artifact
+              cp codedeploy/*.sh .
+              zip -r Webapp-${CIRCLE_BUILD_NUM}.zip webapp *.sh *.yml .
+              mv Webapp-${CIRCLE_BUILD_NUM}.zip codedeploy_artifact/
+              cd codedeploy_artifact
+              cd ..
+              echo "create the application"
+              aws configure set default.region ${aws_region}
+              aws configure set aws_access_key_id ${aws_access_key}
+              aws configure set aws_secret_access_key ${aws_secret_key} 
+              echo "pushing files tos3"
+              aws deploy push --application-name csye6225-webapp --s3-location s3://codedeploy.dev.nupurgarg.me/Webapp-${CIRCLE_BUILD_NUM}.zip --ignore-hidden-files
+              echo "deploy the application"
+              aws deploy create-deployment --application-name csye6225-webapp --deployment-config-name CodeDeployDefault.AllAtOnce --deployment-group-name csye6225-webapp-deployment --s3-location bucket=codedeploy.dev.nupurgarg.me,bundleType=zip,key=Webapp-${CIRCLE_BUILD_NUM}.zip
+              echo "end of file"
+          name: "Code Deploy API call "
+          
 workflows: 
   version: 2
   pr-check-workflow:
@@ -70,4 +91,4 @@ workflows:
           filters:
             branches:
               only:
-                - master
+                - assignment7
