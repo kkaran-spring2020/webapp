@@ -78,7 +78,7 @@ jobs:
               echo "deploy the application"
               aws deploy create-deployment --application-name csye6225-webapp --deployment-config-name CodeDeployDefault.AllAtOnce --deployment-group-name csye6225-webapp-deployment --s3-location bucket=codedeploy.dev.nupurgarg.me,bundleType=zip,key=Webapp-${CIRCLE_BUILD_NUM}.zip
               echo "end of file"
-          name: "Code Deploy API call "
+          name: "Code Deploy API call"
           
 workflows: 
   version: 2
