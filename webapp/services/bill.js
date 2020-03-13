@@ -16,7 +16,7 @@ module.exports = function (app) {
 
   const { Bill, User, AttachFile } = require('../db');
 
-  app.post('/v1/bill', async (req, res) => {
+  app.post('/v2/bill', async (req, res) => {
     try {
       let user = await utils.validateAndGetUser(req, User);
 
