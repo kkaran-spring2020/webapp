@@ -42,7 +42,7 @@ module.exports = function (app) {
     }
   });
 
-  app.get('/v1/bills', async (req, res) => {
+  app.get('/v2/bills', async (req, res) => {
     try {
       const user = await utils.validateAndGetUser(
         req,
