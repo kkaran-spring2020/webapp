@@ -7,7 +7,8 @@ const AWS = require('aws-sdk')
 require('dotenv').config();
 var dateformat = require("dateformat");
 var logg = require('../logger');
-
+const SDC = require('statsd-client');
+sdc = new SDC({ host: 'localhost', port: 8125 });
 
 
 module.exports = function (app) {
@@ -22,6 +23,8 @@ module.exports = function (app) {
 
   app.post('/v1/bill/:id/file', async (req, res) => {
     try {
+      logger.info("Attachment POST Method Call");
+      sdc.increment('Post Attachment');
       let user = await utils.validateAndGetUser(req, User);
       if (
         !req.files ||
@@ -30,6 +33,7 @@ module.exports = function (app) {
       ) {
         throw new Error('No files were uploaded.');
         logg.error({ error: 'No files were uploaded.' });
+        sdc.increment('POST Bill');
       }
       let bills = await user.getBills({
         where: { id: req.params.id }
@@ -120,6 +124,8 @@ module.exports = function (app) {
     '/v1/bill/:billId/file/:fileId',
     async (req, res) => {
       try {
+        logger.info("Attachment GET Method Call");
+        sdc.increment('GET Attachment');
         const user = await utils.validateAndGetUser(
           req,
           User
@@ -160,6 +166,8 @@ module.exports = function (app) {
     '/v1/bill/:billId/file/:fileId',
     async (req, res) => {
       try {
+        logger.info("Attachment Delete Method Call");
+        sdc.increment('Delete Attachment');
         const user = await utils.validateAndGetUser(
           req,
           User

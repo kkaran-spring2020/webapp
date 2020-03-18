@@ -7,7 +7,8 @@ const billService = require('./services/bill');
 const attachmentService = require('./services/attachFile');
 const fileUpload = require('express-fileupload');
 const logger = require('logger');
-
+const SDC = require('statsd-client');
+sdc = new SDC({ host: 'localhost', port: 8125 });
 database.init();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));

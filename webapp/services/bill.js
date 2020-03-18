@@ -5,7 +5,8 @@ const fs = require('fs');
 const AWS = require('aws-sdk');
 require('dotenv').config();
 var logg = require('../logger');
-
+const SDC = require('statsd-client');
+sdc = new SDC({ host: 'localhost', port: 8125 });
 
 module.exports = function (app) {
 
@@ -18,6 +19,8 @@ module.exports = function (app) {
 
   app.post('/v1/bill', async (req, res) => {
     try {
+      logger.info("Bill POST Method Call");
+      sdc.increment('POST Bill');
       let user = await utils.validateAndGetUser(req, User);
 
       let bill = await Bill.create({
@@ -46,6 +49,8 @@ module.exports = function (app) {
 
   app.get('/v1/bills', async (req, res) => {
     try {
+      logger.info("Bill GET Method Call");
+      sdc.increment('GET all Bills');
       const user = await utils.validateAndGetUser(
         req,
         User
@@ -63,6 +68,8 @@ module.exports = function (app) {
 
   app.get('/v1/bill/:id', async (req, res) => {
     try {
+      logger.info("Bill GET Method Call");
+      sdc.increment('GET Bill');
       const user = await utils.validateAndGetUser(
         req,
         User
@@ -97,6 +104,8 @@ module.exports = function (app) {
 
   app.delete('/v1/bill/:id', async (req, res) => {
     try {
+      logger.info("Bill DELETE Method Call");
+      sdc.increment('DELETE Bills');
       const user = await utils.validateAndGetUser(
         req,
         User
@@ -133,7 +142,7 @@ module.exports = function (app) {
         s3.deleteObjects(details, function (error, data) {
           if (error) console.log(error, error.stack);
           else console.log('delete', data);
-          if (error) logg.error({ error: error});
+          if (error) logg.error({ error: error });
         });
       }
 
@@ -164,6 +173,8 @@ module.exports = function (app) {
 
   app.put('/v1/bill/:id', async (req, res) => {
     try {
+      logger.info("Bill PUT Method Call");
+      sdc.increment('UPDATE Bill');
       const user = await utils.validateAndGetUser(
         req,
         User
@@ -188,7 +199,7 @@ module.exports = function (app) {
       }
       if (req.body.amount_due < 0.01) {
         throw new Error("Amount can't be less than 0.01")
-        logg.error({error: 'Amount cant be less than 0.01' });
+        logg.error({ error: 'Amount cant be less than 0.01' });
       }
       else {
         bill.amount_due = req.body.amount_due;

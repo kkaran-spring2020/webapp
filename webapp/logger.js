@@ -1,31 +1,48 @@
-const winston = require('winston');
-const cloudWatchTransport = require('winston-aws-cloudwatch');
-winston.loggers.add('error-log', {
+var winston = require('winston');
+
+// define the custom settings for each transport (file, console)
+var options = {
+    file: {
+        level: 'info',
+        filename: `${__dirname}/logs/app.log`,
+        handleExceptions: true,
+        json: true,
+        maxsize: 5242880, // 5MB
+        maxFiles: 5,
+        colorize: false,
+    },
+    console: {
+        level: 'debug',
+        handleExceptions: true,
+        json: false,
+        colorize: true,
+    },
+};
+
+const logFormat = winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.align(),
+    winston.format.printf(
+        info => `TIMESTAMP: ${info.timestamp}, LEVEL:  ${info.level}, MESSAGE: ${info.message}`
+    ),
+);
+
+// instantiate a new Winston Logger with the settings defined above
+var logger = new winston.createLogger({
+    format: logFormat,
     transports: [
-        new winston.transports.Console({
-            json: true,
-            colorize: true,
-            level: 'info'
-        }),
-        (new cloudWatchTransport({
-            logGroupName: 'demo',
-            logStreamName: 'log-' + new Date().toISOString().split('T')[0],
-            createLogGroup: true,
-            createLogStream: true,
-            submissionInterval: 2000,
-            submissionRetryCount: 1,
-            batchSize: 20,
-            awsConfig: {
-                region: 'us-east-1',
-                accessKeyId: 'AKIA2PMB67KOZGGZYBSK',
-                secretAccessKey: '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'
-            },
-            formatLog: function (item: any) {
-                return item.level + ': ' + item.message + ' ' + JSON.stringify(item.meta);
-            }
-        })
-        )
-    ]
+        new winston.transports.File(options.file),
+        new winston.transports.Console(options.console)
+    ],
+    exitOnError: false, // do not exit on handled exceptions
 });
 
-const logg = winston.loggers.get('error-log');
+// create a stream object with a 'write' function that will be used by `morgan`
+logger.stream = {
+    write: function (message, encoding) {
+        // use the 'info' log level so the output will be picked up by both transports (file and console)
+        logger.info(message);
+    },
+};
+
+module.exports = logger;

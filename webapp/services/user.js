@@ -3,10 +3,14 @@ const utils = require('../utils');
 const uuidv4 = require('uuidv4');
 const bcrypt = require('bcrypt');
 var logg = require('../logger');
+const SDC = require('statsd-client');
+sdc = new SDC({ host: 'localhost', port: 8125 });
 module.exports = function (app) {
   const { User } = require('../db');
   app.post('/v1/user', async (req, res) => {
     try {
+      logger.info("User POST Method Call");
+      sdc.increment('POST User');
       utils.PasswordStrength(req.body.password);
       const hash = await bcrypt.hash(req.body.password, 10);
 
@@ -33,6 +37,8 @@ module.exports = function (app) {
 
   app.get('/v1/user/self', async (req, res) => {
     try {
+      logger.info("User GET Method Call");
+      sdc.increment('GET User');
       let user = await utils.validateAndGetUser(req, User);
       user = user.toJSON();
       delete user.password;
@@ -46,6 +52,8 @@ module.exports = function (app) {
 
   app.put('/v1/user/self', async (req, res) => {
     try {
+      logger.info("User PUT Method Call");
+      sdc.increment('Update User');
       let user = await utils.validateAndGetUser(req, User);
 
       if (req.body.first_name) {
