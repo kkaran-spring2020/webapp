@@ -25,7 +25,9 @@
     "sequelize": "^5.21.3",
     "sha256": "^0.2.0",
     "sqlite3": "^4.1.1",
-    "uuidv4": "^6.0.2"
+    "uuidv4": "^6.0.2",
+    "winston": "^3.2.1",
+    "winston-cloudwatch": "^2.3.0"
   },
   "devDependencies": {
     "aws-sdk": "^2.627.0",

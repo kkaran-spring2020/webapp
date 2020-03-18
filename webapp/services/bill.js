@@ -33,12 +33,14 @@ module.exports = function (app) {
 
       await user.addBill(bill);
       res.status(201).send(bill.toJSON());
+      logg.info({ success: "success" });
     } catch (error) {
       let message = null;
       if (error instanceof Sequelize.ValidationError) {
         message = error.errors[0].message;
       }
       res.status(400).send(message || error.toString());
+      logg.error({ error: e.toString() });
     }
   });
 
@@ -52,8 +54,10 @@ module.exports = function (app) {
 
 
       res.status(200).send(bills);
+      logg.info({ success: "success" });
     } catch (e) {
       res.status(400).send(e.toString());
+      logg.error({ error: e.toString() });
     }
   });
 
@@ -69,6 +73,7 @@ module.exports = function (app) {
       });
       if (bills.length == 0) {
         throw new Error('Invalid Bill Id');
+        logg.error({ error: 'Invalid Bill Id' });
       }
       bill = bills[0];
 
@@ -83,8 +88,10 @@ module.exports = function (app) {
 
       billTable = bill.dataValues;
       res.status(200).send(billTable);
+      logg.info({ success: "success" });
     } catch (e) {
       res.status(400).send(e.toString());
+      logg.error({ error: e.toString() });
     }
   });
 
@@ -99,6 +106,7 @@ module.exports = function (app) {
       });
       if (bills.length == 0) {
         throw new Error('Invalid Bill Id');
+        logg.error({ error: 'Invalid Bill Id' });
       }
       const bill = bills[0];
       //karan
@@ -125,6 +133,7 @@ module.exports = function (app) {
         s3.deleteObjects(details, function (error, data) {
           if (error) console.log(error, error.stack);
           else console.log('delete', data);
+          if (error) logg.error({ error: error});
         });
       }
 
@@ -146,8 +155,10 @@ module.exports = function (app) {
 
       //karan
       res.status(204).send();
+      logg.info({ success: "success" });
     } catch (e) {
       res.status(400).send(e.toString());
+      logg.error({ error: e.toString() });
     }
   });
 
@@ -162,6 +173,7 @@ module.exports = function (app) {
       });
       if (bills.length == 0) {
         throw new Error('Invalid Bill Id');
+        logg.error({ error: 'Invalid Bill Id' });
       }
       const bill = bills[0];
 
@@ -176,6 +188,7 @@ module.exports = function (app) {
       }
       if (req.body.amount_due < 0.01) {
         throw new Error("Amount can't be less than 0.01")
+        logg.error({error: 'Amount cant be less than 0.01' });
       }
       else {
         bill.amount_due = req.body.amount_due;
@@ -189,8 +202,10 @@ module.exports = function (app) {
 
       await bill.save();
       res.status(204).send();
+      logg.info({ success: "success" });
     } catch (e) {
       res.status(400).send(e.toString());
+      logg.error({ error: e.toString() });
     }
   });
 };

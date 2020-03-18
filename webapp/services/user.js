@@ -20,12 +20,14 @@ module.exports = function (app) {
       users = users.toJSON();
       delete users.password;
       res.status(201).send(users);
+      logg.info({ success: "success" });
     } catch (error) {
       let message = null;
       if (error instanceof Sequelize.ValidationError) {
         message = error.errors[0].message;
       }
       res.status(400).send(message || error.toString());
+      logg.error({ error: e.toString() });
     }
   });
 
@@ -35,8 +37,10 @@ module.exports = function (app) {
       user = user.toJSON();
       delete user.password;
       res.status(200).send(user);
+      logg.info({ success: "success" });
     } catch (e) {
       res.status(400).send(e.toString());
+      logg.error({ error: e.toString() });
     }
   });
 
@@ -57,8 +61,10 @@ module.exports = function (app) {
       }
       await user.save();
       res.status(204).send();
+      logg.info({ success: "success" });
     } catch (e) {
       res.status(400).send(e.toString());
+      logg.error({ error: e.toString() });
     }
   });
 };

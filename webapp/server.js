@@ -21,11 +21,13 @@ var main = app.listen(
   function() {
     var port = main.address().port;
     console.log('Running on port: ', port);
+    logg.info({ success: 'Running on port: ', port });
   }
 );
 
 app.use(function (err, req, res, next) {
     console.log('This is the invalid field ->', err.field)
+    logg.error({ error: 'invalid field'});
     next(err)
 });
 
