@@ -78,7 +78,7 @@ jobs:
               echo "deploy the application"
               aws deploy create-deployment --application-name csye6225-webapp --deployment-config-name CodeDeployDefault.AllAtOnce --deployment-group-name csye6225-webapp-deployment --s3-location bucket=codedeploy.prod.karan1908.me,bundleType=zip,key=Webapp-${CIRCLE_BUILD_NUM}.zip
               echo "Adding cloudwatch agent"
-              wget https://s3.us-east-1.amazonaws.com/amazoncloudwatch-agent-us-east-1/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb",
+              wget https://s3.us-east-1.amazonaws.com/amazoncloudwatch-agent-us-east-1/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
               sudo dpkg -i -E ./amazon-cloudwatch-agent.deb
               echo "CloudWatch Installed"
               echo "end of file"
