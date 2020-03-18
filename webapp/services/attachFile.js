@@ -6,6 +6,7 @@ const mime = require('mime');
 const AWS = require('aws-sdk')
 require('dotenv').config();
 var dateformat = require("dateformat");
+var logg = require('../logger');
 
 
 

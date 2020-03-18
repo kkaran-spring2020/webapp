@@ -4,7 +4,7 @@ const uuidv4 = require('uuidv4');
 const fs = require('fs');
 const AWS = require('aws-sdk');
 require('dotenv').config();
-
+var logg = require('../logger');
 
 
 module.exports = function (app) {

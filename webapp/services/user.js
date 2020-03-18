@@ -2,7 +2,7 @@ const Sequelize = require('sequelize');
 const utils = require('../utils');
 const uuidv4 = require('uuidv4');
 const bcrypt = require('bcrypt');
-
+var logg = require('../logger');
 module.exports = function (app) {
   const { User } = require('../db');
   app.post('/v1/user', async (req, res) => {

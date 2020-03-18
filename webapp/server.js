@@ -6,6 +6,7 @@ const userService = require('./services/user');
 const billService = require('./services/bill');
 const attachmentService = require('./services/attachFile');
 const fileUpload = require('express-fileupload');
+const logger = require('logger');
 
 database.init();
 app.use(bodyParser.json());
