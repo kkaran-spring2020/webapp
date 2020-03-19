@@ -4,8 +4,9 @@ const uuidv4 = require('uuidv4');
 const fs = require('fs');
 const AWS = require('aws-sdk');
 require('dotenv').config();
-
-
+var logg = require('../logger');
+const SDC = require('statsd-client');
+sdc = new SDC({ host: 'localhost', port: 8125 });
 
 module.exports = function (app) {
 
@@ -16,8 +17,10 @@ module.exports = function (app) {
 
   const { Bill, User, AttachFile } = require('../db');
 
-  app.post('/v2/bill', async (req, res) => {
+  app.post('/v1/bill', async (req, res) => {
     try {
+      logger.info("Bill POST Method Call");
+      sdc.increment('POST Bill');
       let user = await utils.validateAndGetUser(req, User);
 
       let bill = await Bill.create({
@@ -33,17 +36,21 @@ module.exports = function (app) {
 
       await user.addBill(bill);
       res.status(201).send(bill.toJSON());
+      logg.info({ success: "success" });
     } catch (error) {
       let message = null;
       if (error instanceof Sequelize.ValidationError) {
         message = error.errors[0].message;
       }
       res.status(400).send(message || error.toString());
+      logg.error({ error: e.toString() });
     }
   });
 
-  app.get('/v2/bills', async (req, res) => {
+  app.get('/v1/bills', async (req, res) => {
     try {
+      logger.info("Bill GET Method Call");
+      sdc.increment('GET all Bills');
       const user = await utils.validateAndGetUser(
         req,
         User
@@ -52,13 +59,17 @@ module.exports = function (app) {
 
 
       res.status(200).send(bills);
+      logg.info({ success: "success" });
     } catch (e) {
       res.status(400).send(e.toString());
+      logg.error({ error: e.toString() });
     }
   });
 
   app.get('/v1/bill/:id', async (req, res) => {
     try {
+      logger.info("Bill GET Method Call");
+      sdc.increment('GET Bill');
       const user = await utils.validateAndGetUser(
         req,
         User
@@ -69,6 +80,7 @@ module.exports = function (app) {
       });
       if (bills.length == 0) {
         throw new Error('Invalid Bill Id');
+        logg.error({ error: 'Invalid Bill Id' });
       }
       bill = bills[0];
 
@@ -83,13 +95,17 @@ module.exports = function (app) {
 
       billTable = bill.dataValues;
       res.status(200).send(billTable);
+      logg.info({ success: "success" });
     } catch (e) {
       res.status(400).send(e.toString());
+      logg.error({ error: e.toString() });
     }
   });
 
   app.delete('/v1/bill/:id', async (req, res) => {
     try {
+      logger.info("Bill DELETE Method Call");
+      sdc.increment('DELETE Bills');
       const user = await utils.validateAndGetUser(
         req,
         User
@@ -99,6 +115,7 @@ module.exports = function (app) {
       });
       if (bills.length == 0) {
         throw new Error('Invalid Bill Id');
+        logg.error({ error: 'Invalid Bill Id' });
       }
       const bill = bills[0];
       //karan
@@ -125,6 +142,7 @@ module.exports = function (app) {
         s3.deleteObjects(details, function (error, data) {
           if (error) console.log(error, error.stack);
           else console.log('delete', data);
+          if (error) logg.error({ error: error });
         });
       }
 
@@ -146,13 +164,17 @@ module.exports = function (app) {
 
       //karan
       res.status(204).send();
+      logg.info({ success: "success" });
     } catch (e) {
       res.status(400).send(e.toString());
+      logg.error({ error: e.toString() });
     }
   });
 
   app.put('/v1/bill/:id', async (req, res) => {
     try {
+      logger.info("Bill PUT Method Call");
+      sdc.increment('UPDATE Bill');
       const user = await utils.validateAndGetUser(
         req,
         User
@@ -162,6 +184,7 @@ module.exports = function (app) {
       });
       if (bills.length == 0) {
         throw new Error('Invalid Bill Id');
+        logg.error({ error: 'Invalid Bill Id' });
       }
       const bill = bills[0];
 
@@ -176,6 +199,7 @@ module.exports = function (app) {
       }
       if (req.body.amount_due < 0.01) {
         throw new Error("Amount can't be less than 0.01")
+        logg.error({ error: 'Amount cant be less than 0.01' });
       }
       else {
         bill.amount_due = req.body.amount_due;
@@ -189,8 +213,10 @@ module.exports = function (app) {
 
       await bill.save();
       res.status(204).send();
+      logg.info({ success: "success" });
     } catch (e) {
       res.status(400).send(e.toString());
+      logg.error({ error: e.toString() });
     }
   });
 };

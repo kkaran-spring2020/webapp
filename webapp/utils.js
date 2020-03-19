@@ -12,6 +12,7 @@ const PasswordStrength = password => {
   const passwordTest = owasp.test(password);
   if (passwordTest.strong == false) {
     throw new Error(passwordTest.errors[0]);
+    logg.error({ error: passwordTest.errors[0] });
   }
 };
 
@@ -23,6 +24,7 @@ const validateAndGetUser = async (req, User) => {
   const creds = auth(req);
   if (!creds || !creds.name || !creds.pass) {
     throw new Error('Invalid Credentials');
+    logg.error({ error: 'Invalid Attachment' });
   }
   const user = await User.findOne({
     where: {
@@ -31,6 +33,7 @@ const validateAndGetUser = async (req, User) => {
   });
   if (!user) {
     throw new Error('User Not Found');
+    logg.error({ error: 'User Not Found' });
   }
   const getPasswordHash = await bcrypt.compare(
       creds.pass,
@@ -38,6 +41,7 @@ const validateAndGetUser = async (req, User) => {
   );
   if (!getPasswordHash){
     throw new Error('Invalid Credentials');
+    logg.error({ error: 'Invalid Credentials' });
   }
 
   return user;

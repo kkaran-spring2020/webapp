@@ -6,7 +6,9 @@ const userService = require('./services/user');
 const billService = require('./services/bill');
 const attachmentService = require('./services/attachFile');
 const fileUpload = require('express-fileupload');
-
+const logger = require('logger');
+const SDC = require('statsd-client');
+sdc = new SDC({ host: 'localhost', port: 8125 });
 database.init();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -21,11 +23,13 @@ var main = app.listen(
   function() {
     var port = main.address().port;
     console.log('Running on port: ', port);
+    logg.info({ success: 'Running on port: ', port });
   }
 );
 
 app.use(function (err, req, res, next) {
     console.log('This is the invalid field ->', err.field)
+    logg.error({ error: 'invalid field'});
     next(err)
 });
 

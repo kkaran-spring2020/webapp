@@ -6,7 +6,9 @@ const mime = require('mime');
 const AWS = require('aws-sdk')
 require('dotenv').config();
 var dateformat = require("dateformat");
-
+var logg = require('../logger');
+const SDC = require('statsd-client');
+sdc = new SDC({ host: 'localhost', port: 8125 });
 
 
 module.exports = function (app) {
@@ -21,6 +23,8 @@ module.exports = function (app) {
 
   app.post('/v1/bill/:id/file', async (req, res) => {
     try {
+      logger.info("Attachment POST Method Call");
+      sdc.increment('Post Attachment');
       let user = await utils.validateAndGetUser(req, User);
       if (
         !req.files ||
@@ -28,6 +32,8 @@ module.exports = function (app) {
         !req.files.attachment
       ) {
         throw new Error('No files were uploaded.');
+        logg.error({ error: 'No files were uploaded.' });
+        sdc.increment('POST Bill');
       }
       let bills = await user.getBills({
         where: { id: req.params.id }
@@ -36,6 +42,7 @@ module.exports = function (app) {
       bill = bills[0];
       if (bill.length == 0) {
         throw new Error('Invalid Bill Id');
+        logg.error({ error: 'Invalid Bill Id' });
       }
       const attachments = await AttachFile.findAll({
         where: { BillId: req.params.id }
@@ -43,6 +50,7 @@ module.exports = function (app) {
 
       if (attachments.length != 0) {
         throw new Error("BillId already exists");
+        logg.error({ error: 'BillId already exists' });
       }
       const uuid = uuidv4.uuid();
       let extension = mime.getExtension(req.files.attachment.mimetype);
@@ -59,8 +67,10 @@ module.exports = function (app) {
         s3.putObject(params, function (err, data) {
           if (err) {
             console.log(err)
+            logg.error({ error: err});
           } else {
             console.log("Successfully uploaded data to Bucket/Key");
+            logg.info({ success: "Successfully uploaded data to Bucket/Key" });
           }
 
         });
@@ -94,8 +104,10 @@ module.exports = function (app) {
 
         await bill.setAttachFile(fileMetadata);
         res.status(201).send(fileUpload);
+        logg.info({ success: "success" });
       } else {
         throw new Error("Invalid Extension of attachment");
+        logg.error({ error: 'Invalid Extension of attachment' });
       }
 
     } catch (error) {
@@ -104,6 +116,7 @@ module.exports = function (app) {
         message = error.errors[0].message;
       }
       res.status(400).send(message || error.toString());
+      logg.error({ error: message || error.toString() });
     }
   });
 
@@ -111,6 +124,8 @@ module.exports = function (app) {
     '/v1/bill/:billId/file/:fileId',
     async (req, res) => {
       try {
+        logger.info("Attachment GET Method Call");
+        sdc.increment('GET Attachment');
         const user = await utils.validateAndGetUser(
           req,
           User
@@ -120,6 +135,7 @@ module.exports = function (app) {
         });
         if (bills.length == 0) {
           throw new Error('Invalid Bill Id');
+          logg.error({ error: 'Invalid Bill Id'});
         }
         const bill = bills[0];
         const attachments = await bill.getAttachFile({
@@ -135,10 +151,13 @@ module.exports = function (app) {
         }
         if (attachments.length == 0) {
           throw new Error('Invalid Attachment Id');
+          logg.error({ error: 'Invalid Attachment Id' });
         }
         res.status(200).send(fileupload);
+        logg.info({ success: "success" });
       } catch (e) {
         res.status(400).send(e.toString());
+        logg.error({ error: e.toString() });
       }
     }
   );
@@ -147,6 +166,8 @@ module.exports = function (app) {
     '/v1/bill/:billId/file/:fileId',
     async (req, res) => {
       try {
+        logger.info("Attachment Delete Method Call");
+        sdc.increment('Delete Attachment');
         const user = await utils.validateAndGetUser(
           req,
           User
@@ -156,6 +177,7 @@ module.exports = function (app) {
         });
         if (bills.length == 0) {
           throw new Error('Invalid Bill Id');
+          logg.error({ error: 'Invalid Bill Id' });
         }
         const bill = bills[0];
         const attachments = await bill.getAttachFile({
@@ -163,6 +185,7 @@ module.exports = function (app) {
         });
         if (attachments.length == 0) {
           throw new Error('Invalid Attachment Id');
+          logg.error({ error: 'Invalid Attachment Id' });
         }
 
         var params = {
@@ -179,6 +202,7 @@ module.exports = function (app) {
         s3.deleteObjects(params, function (err, data) {
           if (err) console.log(err, err.stack);
           else console.log('delete', data);
+          if (error) logg.error({ error: error });
         });
 
         await AttachFile.destroy({
@@ -190,8 +214,10 @@ module.exports = function (app) {
           { where: { id: req.params.billId } }
         );
         res.status(204).send();
+        logg.info({ success: "success" });
       } catch (e) {
         res.status(400).send(e.toString());
+        logg.error({ error: e.toString() });
       }
     }
   );
