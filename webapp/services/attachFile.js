@@ -65,7 +65,7 @@ module.exports = function (app) {
           Body: JSON.stringify(req.files.attachment)
         };
 
-
+        var startDate_s3 = new Date();
         s3.putObject(params, function (err, data) {
           if (err) {
             console.log(err)
@@ -76,7 +76,9 @@ module.exports = function (app) {
           }
 
         });
-
+        var endDate_s3 = new Date();
+        var seconds_s3 = (endDate_s3.getTime() - startDate_s3.getTime()) / 1000;
+        sdc.timing('api-time-post-attachment-s3', seconds_s3);
         // await req.files.attachment.mv(
         //     `${__dirname}/../uploads/${req.params.id}${req.files.attachment.name}`
         // );
@@ -107,7 +109,7 @@ module.exports = function (app) {
         await bill.setAttachFile(fileMetadata);
         var endDate_db = new Date();
         var seconds_db = (endDate_db.getTime() - startDate_db.getTime()) / 1000;
-        sdc.timing('api-time-post-attachment', seconds_db);
+        sdc.timing('api-time-post-attachment-db', seconds_db);
         res.status(201).send(fileUpload);
         logg.info({ success: "success" });
       } else {
@@ -165,7 +167,7 @@ module.exports = function (app) {
         }
         var endDate_db = new Date();
         var seconds_db = (endDate_db.getTime() - startDate_db.getTime()) / 1000;
-        sdc.timing('api-time-get-attachment', seconds_db);
+        sdc.timing('api-time-get-attachment-db', seconds_db);
         res.status(200).send(fileupload);
         logg.info({ success: "success" });
         var endDate = new Date();
@@ -216,13 +218,15 @@ module.exports = function (app) {
             ],
           },
         };
-
+        var startDate_s3 = new Date();
         s3.deleteObjects(params, function (err, data) {
           if (err) console.log(err, err.stack);
           else console.log('delete', data);
           if (error) logg.error({ error: error });
         });
-
+        var endDate_s3 = new Date();
+        var seconds_s3 = (endDate_s3.getTime() - startDate_s3.getTime()) / 1000;
+        sdc.timing('api-time-delete-attachment-s3', seconds_s3);
         await AttachFile.destroy({
           where: { BillId: req.params.billId }
 
@@ -233,7 +237,7 @@ module.exports = function (app) {
         );
         var endDate_db = new Date();
         var seconds_db = (endDate_db.getTime() - startDate_db.getTime()) / 1000;
-        sdc.timing('api-time-delete-attachment', seconds_db);
+        sdc.timing('api-time-delete-attachment-db', seconds_db);
         res.status(204).send();
         logg.info({ success: "success" });
         var endDate = new Date();

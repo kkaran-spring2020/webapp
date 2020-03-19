@@ -24,7 +24,7 @@ module.exports = function (app) {
       });
       var endDate_db = new Date();
       var seconds_db = (endDate_db.getTime() - startDate_db.getTime()) / 1000;
-      sdc.timing('api-time-post-user', seconds_db);
+      sdc.timing('api-time-post-user-db', seconds_db);
       users = users.toJSON();
       delete users.password;
       res.status(201).send(users);
@@ -53,7 +53,7 @@ module.exports = function (app) {
       delete user.password;
       var endDate_db = new Date();
       var seconds_db = (endDate_db.getTime() - startDate_db.getTime()) / 1000;
-      sdc.timing('api-time-get-user', seconds_db);
+      sdc.timing('api-time-get-user-db', seconds_db);
       res.status(200).send(user);
       logg.info({ success: "success" });
       var endDate = new Date();
@@ -88,7 +88,7 @@ module.exports = function (app) {
       await user.save();
       var endDate_db = new Date();
       var seconds_db = (endDate_db.getTime() - startDate_db.getTime()) / 1000;
-      sdc.timing('api-time-put-user', seconds_db);
+      sdc.timing('api-time-put-user-db', seconds_db);
       res.status(204).send();
       logg.info({ success: "success" });
       var endDate = new Date();

@@ -38,7 +38,7 @@ module.exports = function (app) {
       await user.addBill(bill);
       var endDate_db = new Date();
       var seconds_db = (endDate_db.getTime() - startDate_db.getTime()) / 1000;
-      sdc.timing('api-time-post-bill', seconds_db);
+      sdc.timing('api-time-post-bill-db', seconds_db);
       res.status(201).send(bill.toJSON());
       logg.info({ success: "success" });
       var endDate = new Date();
@@ -68,7 +68,7 @@ module.exports = function (app) {
       const bills = await user.getBills();
       var endDate_db = new Date();
       var seconds_db = (endDate_db.getTime() - startDate_db.getTime()) / 1000;
-      sdc.timing('api-time-getall-bills', seconds_db);
+      sdc.timing('api-time-getall-bills-db', seconds_db);
 
       res.status(200).send(bills);
       logg.info({ success: "success" });
@@ -114,7 +114,7 @@ module.exports = function (app) {
       billTable = bill.dataValues;
       var endDate_db = new Date();
       var seconds_db = (endDate_db.getTime() - startDate_db.getTime()) / 1000;
-      sdc.timing('api-time-get-bill', seconds_db);
+      sdc.timing('api-time-get-bill-db', seconds_db);
       res.status(200).send(billTable);
       logg.info({ success: "success" });
       var endDate = new Date();
@@ -164,12 +164,15 @@ module.exports = function (app) {
             ],
           },
         };
-
+        var startDate_s3 = new Date();
         s3.deleteObjects(details, function (error, data) {
           if (error) console.log(error, error.stack);
           else console.log('delete', data);
           if (error) logg.error({ error: error });
         });
+        var endDate_s3 = new Date();
+        var seconds_s3 = (endDate_s3.getTime() - startDate_s3.getTime()) / 1000;
+        sdc.timing('api-time-delete-bill', seconds_s3);
       }
 
       await user.removeBill(bill);
@@ -188,7 +191,7 @@ module.exports = function (app) {
 
       var endDate_db = new Date();
       var seconds_db = (endDate_db.getTime() - startDate_db.getTime()) / 1000;
-      sdc.timing('api-time-delete-bill', seconds_db);
+      sdc.timing('api-time-delete-bill-db', seconds_db);
 
       //karan
       res.status(204).send();
@@ -247,7 +250,7 @@ module.exports = function (app) {
       await bill.save();
       var endDate_db = new Date();
       var seconds_db = (endDate_db.getTime() - startDate_db.getTime()) / 1000;
-      sdc.timing('api-time-put-bill', seconds_db);
+      sdc.timing('api-time-put-bill-db', seconds_db);
       res.status(204).send();
       logg.info({ success: "success" });
       var endDate = new Date();
