@@ -23,8 +23,10 @@ module.exports = function (app) {
 
   app.post('/v1/bill/:id/file', async (req, res) => {
     try {
-      logger.info("Attachment POST Method Call");
+      var startDate = new Date();
+      logg.info("Attachment POST Method Call");
       sdc.increment('Post Attachment');
+      var startDate_db = new Date();
       let user = await utils.validateAndGetUser(req, User);
       if (
         !req.files ||
@@ -63,18 +65,20 @@ module.exports = function (app) {
           Body: JSON.stringify(req.files.attachment)
         };
 
-
+        var startDate_s3 = new Date();
         s3.putObject(params, function (err, data) {
           if (err) {
             console.log(err)
-            logg.error({ error: err});
+            logg.error({ error: err });
           } else {
             console.log("Successfully uploaded data to Bucket/Key");
             logg.info({ success: "Successfully uploaded data to Bucket/Key" });
           }
 
         });
-
+        var endDate_s3 = new Date();
+        var seconds_s3 = (endDate_s3.getTime() - startDate_s3.getTime()) / 1000;
+        sdc.timing('api-time-post-attachment-s3', seconds_s3);
         // await req.files.attachment.mv(
         //     `${__dirname}/../uploads/${req.params.id}${req.files.attachment.name}`
         // );
@@ -103,12 +107,18 @@ module.exports = function (app) {
         );
 
         await bill.setAttachFile(fileMetadata);
+        var endDate_db = new Date();
+        var seconds_db = (endDate_db.getTime() - startDate_db.getTime()) / 1000;
+        sdc.timing('api-time-post-attachment-db', seconds_db);
         res.status(201).send(fileUpload);
         logg.info({ success: "success" });
       } else {
         throw new Error("Invalid Extension of attachment");
         logg.error({ error: 'Invalid Extension of attachment' });
       }
+      var endDate = new Date();
+      var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+      sdc.timing('api-time-post-attachment', seconds);
 
     } catch (error) {
       let message = null;
@@ -124,8 +134,10 @@ module.exports = function (app) {
     '/v1/bill/:billId/file/:fileId',
     async (req, res) => {
       try {
-        logger.info("Attachment GET Method Call");
+        var startDate = new Date();
+        logg.info("Attachment GET Method Call");
         sdc.increment('GET Attachment');
+        var startDate_db = new Date();
         const user = await utils.validateAndGetUser(
           req,
           User
@@ -135,7 +147,7 @@ module.exports = function (app) {
         });
         if (bills.length == 0) {
           throw new Error('Invalid Bill Id');
-          logg.error({ error: 'Invalid Bill Id'});
+          logg.error({ error: 'Invalid Bill Id' });
         }
         const bill = bills[0];
         const attachments = await bill.getAttachFile({
@@ -153,8 +165,14 @@ module.exports = function (app) {
           throw new Error('Invalid Attachment Id');
           logg.error({ error: 'Invalid Attachment Id' });
         }
+        var endDate_db = new Date();
+        var seconds_db = (endDate_db.getTime() - startDate_db.getTime()) / 1000;
+        sdc.timing('api-time-get-attachment-db', seconds_db);
         res.status(200).send(fileupload);
         logg.info({ success: "success" });
+        var endDate = new Date();
+        var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+        sdc.timing('api-time-get-attachment', seconds);
       } catch (e) {
         res.status(400).send(e.toString());
         logg.error({ error: e.toString() });
@@ -166,8 +184,10 @@ module.exports = function (app) {
     '/v1/bill/:billId/file/:fileId',
     async (req, res) => {
       try {
-        logger.info("Attachment Delete Method Call");
+        var startDate = new Date();
+        logg.info("Attachment Delete Method Call");
         sdc.increment('Delete Attachment');
+        var startDate_db = new Date();
         const user = await utils.validateAndGetUser(
           req,
           User
@@ -198,13 +218,15 @@ module.exports = function (app) {
             ],
           },
         };
-
+        var startDate_s3 = new Date();
         s3.deleteObjects(params, function (err, data) {
           if (err) console.log(err, err.stack);
           else console.log('delete', data);
           if (error) logg.error({ error: error });
         });
-
+        var endDate_s3 = new Date();
+        var seconds_s3 = (endDate_s3.getTime() - startDate_s3.getTime()) / 1000;
+        sdc.timing('api-time-delete-attachment-s3', seconds_s3);
         await AttachFile.destroy({
           where: { BillId: req.params.billId }
 
@@ -213,8 +235,14 @@ module.exports = function (app) {
           { attachment: {} },
           { where: { id: req.params.billId } }
         );
+        var endDate_db = new Date();
+        var seconds_db = (endDate_db.getTime() - startDate_db.getTime()) / 1000;
+        sdc.timing('api-time-delete-attachment-db', seconds_db);
         res.status(204).send();
         logg.info({ success: "success" });
+        var endDate = new Date();
+        var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+        sdc.timing('api-time-delete-attachment', seconds);
       } catch (e) {
         res.status(400).send(e.toString());
         logg.error({ error: e.toString() });

@@ -9,11 +9,12 @@ module.exports = function (app) {
   const { User } = require('../db');
   app.post('/v1/user', async (req, res) => {
     try {
-      logger.info("User POST Method Call");
+      var startDate_db = new Date();
+      logg.info("User POST Method Call");
       sdc.increment('POST User');
       utils.PasswordStrength(req.body.password);
       const hash = await bcrypt.hash(req.body.password, 10);
-
+      var startDate_db = new Date();
       let users = await User.create({
         id: uuidv4.uuid(),
         first_name: req.body.first_name,
@@ -21,10 +22,16 @@ module.exports = function (app) {
         password: hash,
         email_address: req.body.email_address
       });
+      var endDate_db = new Date();
+      var seconds_db = (endDate_db.getTime() - startDate_db.getTime()) / 1000;
+      sdc.timing('api-time-post-user-db', seconds_db);
       users = users.toJSON();
       delete users.password;
       res.status(201).send(users);
       logg.info({ success: "success" });
+      var endDate = new Date();
+      var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+      sdc.timing('api-time-post-user', seconds);
     } catch (error) {
       let message = null;
       if (error instanceof Sequelize.ValidationError) {
@@ -37,13 +44,22 @@ module.exports = function (app) {
 
   app.get('/v1/user/self', async (req, res) => {
     try {
-      logger.info("User GET Method Call");
+      var startDate = new Date();
+      logg.info("User GET Method Call");
       sdc.increment('GET User');
+      var startDate_db = new Date();
       let user = await utils.validateAndGetUser(req, User);
       user = user.toJSON();
       delete user.password;
+      var endDate_db = new Date();
+      var seconds_db = (endDate_db.getTime() - startDate_db.getTime()) / 1000;
+      sdc.timing('api-time-get-user-db', seconds_db);
       res.status(200).send(user);
       logg.info({ success: "success" });
+      var endDate = new Date();
+      var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+      sdc.timing('api-time-get-user', seconds);
+
     } catch (e) {
       res.status(400).send(e.toString());
       logg.error({ error: e.toString() });
@@ -52,8 +68,10 @@ module.exports = function (app) {
 
   app.put('/v1/user/self', async (req, res) => {
     try {
-      logger.info("User PUT Method Call");
+      var startDate = new Date();
+      logg.info("User PUT Method Call");
       sdc.increment('Update User');
+      var startDate_db = new Date();
       let user = await utils.validateAndGetUser(req, User);
 
       if (req.body.first_name) {
@@ -68,8 +86,14 @@ module.exports = function (app) {
 
       }
       await user.save();
+      var endDate_db = new Date();
+      var seconds_db = (endDate_db.getTime() - startDate_db.getTime()) / 1000;
+      sdc.timing('api-time-put-user-db', seconds_db);
       res.status(204).send();
       logg.info({ success: "success" });
+      var endDate = new Date();
+      var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+      sdc.timing('api-time-put-user', seconds);
     } catch (e) {
       res.status(400).send(e.toString());
       logg.error({ error: e.toString() });

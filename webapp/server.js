@@ -6,7 +6,7 @@ const userService = require('./services/user');
 const billService = require('./services/bill');
 const attachmentService = require('./services/attachFile');
 const fileUpload = require('express-fileupload');
-const logger = require('logger');
+const logg = require('./logger');
 const SDC = require('statsd-client');
 sdc = new SDC({ host: 'localhost', port: 8125 });
 database.init();
