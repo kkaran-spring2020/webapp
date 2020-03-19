@@ -23,7 +23,7 @@ module.exports = function (app) {
       logg.info("Bill POST Method Call");
       sdc.increment('POST Bill');
       let user = await utils.validateAndGetUser(req, User);
-
+      var startDate_db = new Date();
       let bill = await Bill.create({
         id: uuidv4.uuid(),
         vendor: req.body.vendor,
@@ -36,6 +36,9 @@ module.exports = function (app) {
       });
 
       await user.addBill(bill);
+      var endDate_db = new Date();
+      var seconds_db = (endDate_db.getTime() - startDate_db.getTime()) / 1000;
+      sdc.timing('api-time-post-bill', seconds_db);
       res.status(201).send(bill.toJSON());
       logg.info({ success: "success" });
       var endDate = new Date();
@@ -56,12 +59,16 @@ module.exports = function (app) {
       var startDate = new Date();
       logg.info("Bill GET Method Call");
       sdc.increment('GET all Bills');
+      var startDate_db = new Date();
       const user = await utils.validateAndGetUser(
         req,
         User
       );
-      const bills = await user.getBills();
 
+      const bills = await user.getBills();
+      var endDate_db = new Date();
+      var seconds_db = (endDate_db.getTime() - startDate_db.getTime()) / 1000;
+      sdc.timing('api-time-getall-bills', seconds_db);
 
       res.status(200).send(bills);
       logg.info({ success: "success" });
@@ -80,6 +87,7 @@ module.exports = function (app) {
       var startDate = new Date();
       logg.info("Bill GET Method Call");
       sdc.increment('GET Bill');
+      var startDate_db = new Date();
       const user = await utils.validateAndGetUser(
         req,
         User
@@ -104,6 +112,9 @@ module.exports = function (app) {
       );
 
       billTable = bill.dataValues;
+      var endDate_db = new Date();
+      var seconds_db = (endDate_db.getTime() - startDate_db.getTime()) / 1000;
+      sdc.timing('api-time-get-bill', seconds_db);
       res.status(200).send(billTable);
       logg.info({ success: "success" });
       var endDate = new Date();
@@ -120,6 +131,7 @@ module.exports = function (app) {
       var startDate = new Date();
       logg.info("Bill DELETE Method Call");
       sdc.increment('DELETE Bills');
+      var startDate_db = new Date();
       const user = await utils.validateAndGetUser(
         req,
         User
@@ -174,7 +186,9 @@ module.exports = function (app) {
         where: { BillId: req.params.id }
       });
 
-
+      var endDate_db = new Date();
+      var seconds_db = (endDate_db.getTime() - startDate_db.getTime()) / 1000;
+      sdc.timing('api-time-delete-bill', seconds_db);
 
       //karan
       res.status(204).send();
@@ -193,6 +207,7 @@ module.exports = function (app) {
       var startDate = new Date();
       logg.info("Bill PUT Method Call");
       sdc.increment('UPDATE Bill');
+      var startDate_db = new Date();
       const user = await utils.validateAndGetUser(
         req,
         User
@@ -230,6 +245,9 @@ module.exports = function (app) {
       }
 
       await bill.save();
+      var endDate_db = new Date();
+      var seconds_db = (endDate_db.getTime() - startDate_db.getTime()) / 1000;
+      sdc.timing('api-time-put-bill', seconds_db);
       res.status(204).send();
       logg.info({ success: "success" });
       var endDate = new Date();

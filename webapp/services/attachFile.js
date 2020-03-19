@@ -26,6 +26,7 @@ module.exports = function (app) {
       var startDate = new Date();
       logg.info("Attachment POST Method Call");
       sdc.increment('Post Attachment');
+      var startDate_db = new Date();
       let user = await utils.validateAndGetUser(req, User);
       if (
         !req.files ||
@@ -104,6 +105,9 @@ module.exports = function (app) {
         );
 
         await bill.setAttachFile(fileMetadata);
+        var endDate_db = new Date();
+        var seconds_db = (endDate_db.getTime() - startDate_db.getTime()) / 1000;
+        sdc.timing('api-time-post-attachment', seconds_db);
         res.status(201).send(fileUpload);
         logg.info({ success: "success" });
       } else {
@@ -131,6 +135,7 @@ module.exports = function (app) {
         var startDate = new Date();
         logg.info("Attachment GET Method Call");
         sdc.increment('GET Attachment');
+        var startDate_db = new Date();
         const user = await utils.validateAndGetUser(
           req,
           User
@@ -158,6 +163,9 @@ module.exports = function (app) {
           throw new Error('Invalid Attachment Id');
           logg.error({ error: 'Invalid Attachment Id' });
         }
+        var endDate_db = new Date();
+        var seconds_db = (endDate_db.getTime() - startDate_db.getTime()) / 1000;
+        sdc.timing('api-time-get-attachment', seconds_db);
         res.status(200).send(fileupload);
         logg.info({ success: "success" });
         var endDate = new Date();
@@ -177,6 +185,7 @@ module.exports = function (app) {
         var startDate = new Date();
         logg.info("Attachment Delete Method Call");
         sdc.increment('Delete Attachment');
+        var startDate_db = new Date();
         const user = await utils.validateAndGetUser(
           req,
           User
@@ -222,6 +231,9 @@ module.exports = function (app) {
           { attachment: {} },
           { where: { id: req.params.billId } }
         );
+        var endDate_db = new Date();
+        var seconds_db = (endDate_db.getTime() - startDate_db.getTime()) / 1000;
+        sdc.timing('api-time-delete-attachment', seconds_db);
         res.status(204).send();
         logg.info({ success: "success" });
         var endDate = new Date();
