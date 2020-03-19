@@ -74,9 +74,9 @@ jobs:
               aws configure set aws_access_key_id ${aws_access_key}
               aws configure set aws_secret_access_key ${aws_secret_key} 
               echo "pushing files tos3"
-              aws deploy push --application-name csye6225-webapp --s3-location s3://codedeploy.prod.karan1908.me/Webapp-${CIRCLE_BUILD_NUM}.zip --ignore-hidden-files
+              aws deploy push --application-name csye6225-webapp --s3-location s3://${CODE_DEPLOY_S3_BUCKET}/Webapp-${CIRCLE_BUILD_NUM}.zip --ignore-hidden-files
               echo "deploy the application"
-              aws deploy create-deployment --application-name csye6225-webapp --deployment-config-name CodeDeployDefault.AllAtOnce --deployment-group-name csye6225-webapp-deployment --s3-location bucket=codedeploy.prod.karan1908.me,bundleType=zip,key=Webapp-${CIRCLE_BUILD_NUM}.zip
+              aws deploy create-deployment --application-name csye6225-webapp --deployment-config-name CodeDeployDefault.AllAtOnce --deployment-group-name csye6225-webapp-deployment --s3-location bucket=${CODE_DEPLOY_S3_BUCKET},bundleType=zip,key=Webapp-${CIRCLE_BUILD_NUM}.zip
               echo "end of file"
           name: "Code Deploy API call "
           
