@@ -9,7 +9,8 @@ module.exports = function (app) {
   const { User } = require('../db');
   app.post('/v1/user', async (req, res) => {
     try {
-      logger.info("User POST Method Call");
+      var startDate = new Date();
+      logg.info("User POST Method Call");
       sdc.increment('POST User');
       utils.PasswordStrength(req.body.password);
       const hash = await bcrypt.hash(req.body.password, 10);
@@ -25,6 +26,9 @@ module.exports = function (app) {
       delete users.password;
       res.status(201).send(users);
       logg.info({ success: "success" });
+      var endDate = new Date();
+      var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+      sdc.timing('api-time-post-user', seconds);
     } catch (error) {
       let message = null;
       if (error instanceof Sequelize.ValidationError) {
@@ -37,13 +41,18 @@ module.exports = function (app) {
 
   app.get('/v1/user/self', async (req, res) => {
     try {
-      logger.info("User GET Method Call");
+      var startDate = new Date();
+      logg.info("User GET Method Call");
       sdc.increment('GET User');
       let user = await utils.validateAndGetUser(req, User);
       user = user.toJSON();
       delete user.password;
       res.status(200).send(user);
       logg.info({ success: "success" });
+      var endDate = new Date();
+      var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+      sdc.timing('api-time-get-user', seconds);
+
     } catch (e) {
       res.status(400).send(e.toString());
       logg.error({ error: e.toString() });
@@ -52,7 +61,8 @@ module.exports = function (app) {
 
   app.put('/v1/user/self', async (req, res) => {
     try {
-      logger.info("User PUT Method Call");
+      var startDate = new Date();
+      logg.info("User PUT Method Call");
       sdc.increment('Update User');
       let user = await utils.validateAndGetUser(req, User);
 
@@ -70,6 +80,9 @@ module.exports = function (app) {
       await user.save();
       res.status(204).send();
       logg.info({ success: "success" });
+      var endDate = new Date();
+      var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+      sdc.timing('api-time-put-user', seconds);
     } catch (e) {
       res.status(400).send(e.toString());
       logg.error({ error: e.toString() });

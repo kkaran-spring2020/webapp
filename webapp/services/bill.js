@@ -19,7 +19,8 @@ module.exports = function (app) {
 
   app.post('/v1/bill', async (req, res) => {
     try {
-      logger.info("Bill POST Method Call");
+      var startDate = new Date();
+      logg.info("Bill POST Method Call");
       sdc.increment('POST Bill');
       let user = await utils.validateAndGetUser(req, User);
 
@@ -37,6 +38,9 @@ module.exports = function (app) {
       await user.addBill(bill);
       res.status(201).send(bill.toJSON());
       logg.info({ success: "success" });
+      var endDate = new Date();
+      var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+      sdc.timing('api-time-post-bill', seconds);
     } catch (error) {
       let message = null;
       if (error instanceof Sequelize.ValidationError) {
@@ -49,7 +53,8 @@ module.exports = function (app) {
 
   app.get('/v1/bills', async (req, res) => {
     try {
-      logger.info("Bill GET Method Call");
+      var startDate = new Date();
+      logg.info("Bill GET Method Call");
       sdc.increment('GET all Bills');
       const user = await utils.validateAndGetUser(
         req,
@@ -60,6 +65,10 @@ module.exports = function (app) {
 
       res.status(200).send(bills);
       logg.info({ success: "success" });
+      var endDate = new Date();
+      var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+      sdc.timing('api-time-getall-bills', seconds);
+
     } catch (e) {
       res.status(400).send(e.toString());
       logg.error({ error: e.toString() });
@@ -68,7 +77,8 @@ module.exports = function (app) {
 
   app.get('/v1/bill/:id', async (req, res) => {
     try {
-      logger.info("Bill GET Method Call");
+      var startDate = new Date();
+      logg.info("Bill GET Method Call");
       sdc.increment('GET Bill');
       const user = await utils.validateAndGetUser(
         req,
@@ -96,6 +106,9 @@ module.exports = function (app) {
       billTable = bill.dataValues;
       res.status(200).send(billTable);
       logg.info({ success: "success" });
+      var endDate = new Date();
+      var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+      sdc.timing('api-time-get-bill', seconds);
     } catch (e) {
       res.status(400).send(e.toString());
       logg.error({ error: e.toString() });
@@ -104,7 +117,8 @@ module.exports = function (app) {
 
   app.delete('/v1/bill/:id', async (req, res) => {
     try {
-      logger.info("Bill DELETE Method Call");
+      var startDate = new Date();
+      logg.info("Bill DELETE Method Call");
       sdc.increment('DELETE Bills');
       const user = await utils.validateAndGetUser(
         req,
@@ -165,6 +179,9 @@ module.exports = function (app) {
       //karan
       res.status(204).send();
       logg.info({ success: "success" });
+      var endDate = new Date();
+      var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+      sdc.timing('api-time-delete-bill', seconds);
     } catch (e) {
       res.status(400).send(e.toString());
       logg.error({ error: e.toString() });
@@ -173,7 +190,8 @@ module.exports = function (app) {
 
   app.put('/v1/bill/:id', async (req, res) => {
     try {
-      logger.info("Bill PUT Method Call");
+      var startDate = new Date();
+      logg.info("Bill PUT Method Call");
       sdc.increment('UPDATE Bill');
       const user = await utils.validateAndGetUser(
         req,
@@ -214,6 +232,9 @@ module.exports = function (app) {
       await bill.save();
       res.status(204).send();
       logg.info({ success: "success" });
+      var endDate = new Date();
+      var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+      sdc.timing('api-time-put-bill', seconds);
     } catch (e) {
       res.status(400).send(e.toString());
       logg.error({ error: e.toString() });

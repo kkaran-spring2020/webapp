@@ -23,7 +23,8 @@ module.exports = function (app) {
 
   app.post('/v1/bill/:id/file', async (req, res) => {
     try {
-      logger.info("Attachment POST Method Call");
+      var startDate = new Date();
+      logg.info("Attachment POST Method Call");
       sdc.increment('Post Attachment');
       let user = await utils.validateAndGetUser(req, User);
       if (
@@ -67,7 +68,7 @@ module.exports = function (app) {
         s3.putObject(params, function (err, data) {
           if (err) {
             console.log(err)
-            logg.error({ error: err});
+            logg.error({ error: err });
           } else {
             console.log("Successfully uploaded data to Bucket/Key");
             logg.info({ success: "Successfully uploaded data to Bucket/Key" });
@@ -109,6 +110,9 @@ module.exports = function (app) {
         throw new Error("Invalid Extension of attachment");
         logg.error({ error: 'Invalid Extension of attachment' });
       }
+      var endDate = new Date();
+      var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+      sdc.timing('api-time-post-attachment', seconds);
 
     } catch (error) {
       let message = null;
@@ -124,7 +128,8 @@ module.exports = function (app) {
     '/v1/bill/:billId/file/:fileId',
     async (req, res) => {
       try {
-        logger.info("Attachment GET Method Call");
+        var startDate = new Date();
+        logg.info("Attachment GET Method Call");
         sdc.increment('GET Attachment');
         const user = await utils.validateAndGetUser(
           req,
@@ -135,7 +140,7 @@ module.exports = function (app) {
         });
         if (bills.length == 0) {
           throw new Error('Invalid Bill Id');
-          logg.error({ error: 'Invalid Bill Id'});
+          logg.error({ error: 'Invalid Bill Id' });
         }
         const bill = bills[0];
         const attachments = await bill.getAttachFile({
@@ -155,6 +160,9 @@ module.exports = function (app) {
         }
         res.status(200).send(fileupload);
         logg.info({ success: "success" });
+        var endDate = new Date();
+        var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+        sdc.timing('api-time-get-attachment', seconds);
       } catch (e) {
         res.status(400).send(e.toString());
         logg.error({ error: e.toString() });
@@ -166,7 +174,8 @@ module.exports = function (app) {
     '/v1/bill/:billId/file/:fileId',
     async (req, res) => {
       try {
-        logger.info("Attachment Delete Method Call");
+        var startDate = new Date();
+        logg.info("Attachment Delete Method Call");
         sdc.increment('Delete Attachment');
         const user = await utils.validateAndGetUser(
           req,
@@ -215,6 +224,9 @@ module.exports = function (app) {
         );
         res.status(204).send();
         logg.info({ success: "success" });
+        var endDate = new Date();
+        var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+        sdc.timing('api-time-delete-attachment', seconds);
       } catch (e) {
         res.status(400).send(e.toString());
         logg.error({ error: e.toString() });
