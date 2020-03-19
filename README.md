@@ -1,6 +1,6 @@
 # CSYE 6225 - Spring 2020
 
-## Information- 
+## Information
 
 | Name | NEU ID | Email Address |
 | --- | --- | --- |
