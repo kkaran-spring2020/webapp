@@ -7,6 +7,11 @@ const SDC = require('statsd-client');
 sdc = new SDC({ host: 'localhost', port: 8125 });
 module.exports = function (app) {
   const { User } = require('../db');
+    app.get('/', async (req,res)=>{
+    res.status(200).json({
+      "message":"Hello... Today's date is : "+new Date()
+    });
+  });
   app.post('/v1/user', async (req, res) => {
     try {
       var startDate_db = new Date();
