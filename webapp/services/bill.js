@@ -7,6 +7,7 @@ require('dotenv').config();
 var logg = require('../logger');
 const SDC = require('statsd-client');
 sdc = new SDC({ host: 'localhost', port: 8125 });
+var dateformat = require("dateformat");
 
 module.exports = function (app) {
 
@@ -14,6 +15,12 @@ module.exports = function (app) {
         accessKeyId: process.env.AWS_ACCESS_KEY,
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
     });
+
+    AWS.config.update({
+        region: "us-east-1"
+    });
+
+    var queue_url = process.env.SQS_URL;
 
     const { Bill, User, AttachFile } = require('../db');
 
@@ -265,16 +272,16 @@ module.exports = function (app) {
         let x = req.params.x;
         try {
             //validating the user
-            const user = await pv.validateUser(
+            const user = await utils.validateAndGetUser(
                 req,
                 User
             );
             //nn
-            function formatDate(date) {
-                var d = new Date(date),
-                    month = "" + (d.getMonth() + 1),
-                    day = "" + d.getDate(),
-                    year = d.getFullYear();
+            function modifyDate(date) {
+                var date2 = new Date(date),
+                    month = "" + (date2.getMonth() + 1),
+                    day = "" + date2.getDate(),
+                    year = date2.getFullYear();
 
                 if (month.length < 2) month = "0" + month;
                 if (day.length < 2) day = "0" + day;
@@ -282,43 +289,50 @@ module.exports = function (app) {
                 return [year, month, day].join("-");
             }
 
-            var d = new Date();
-            console.log("Current Date :" + d);
+            var date1 = dateformat(new Date(), "yyyy-mm-dd");
+            console.log("Current Date :" + date1);
+
+            var date2 = new Date();
+            console.log("Current Date :" + date2);
+
             var new_date = new Date().setDate(
                 new Date().getDate() + Number(req.params.x)
             );
-            var formatted_date = formatDate(new_date);
-            console.log("Bills Before Date: ", formatted_date);
+            var formatdate = modifyDate(new_date);
+            console.log("Bills That are due Before Date: ", formatdate);
 
 
             //k
             const bills = await user.getBills();
             bill = JSON.parse(JSON.stringify(bills));
             console.log(bill);
+
             Response_Msg = [];
-            for (const i in bill) {
-                console.log(bill[i].due_date);
-                if (bill[i].due_date < formatted_date) {
-                    const message = { url: "http://prod.karan1908.me/v1/bill/" + bill[i].id };
+
+            for (const element in bill) {
+                console.log(bill[element].due_date);
+                if (modifyDate(bill[element].due_date) < formatdate) {
+                    const message = { url: "http://prod.karan1908.me/v1/bill/" + bill[element].id };
                     Response_Msg.push(message);
                 }
 
             }
             const Response = {
                 Response_Msg: Response_Msg,
-                Response_email: user.email_address,
-                Response_due_date: formatted_date
+                Response_email: user.email_address
             };
 
             var send_queue_params = {
                 MessageBody: JSON.stringify(Response),
-                QueueUrl: 'https://sqs.us-east-1.amazonaws.com/418928218825/MyQueue',
+                QueueUrl: queue_url,
                 DelaySeconds: 0
             };
 
-            sqs.sendMessage(send_queue_params, function (error3, data) {
-                if (error3) {
-                    console.error(error3);
+            var sqs = new AWS.SQS();
+
+            sqs.sendMessage(send_queue_params, function (error, data) {
+                if (error) {
+                    console.error(error);
                 } else {
                     console.log(
                         "Sent Message From Queue" + JSON.stringify(data)
@@ -327,50 +341,7 @@ module.exports = function (app) {
             });
 
             console.log("Response: " + JSON.stringify(Response));
-            //res.status(200).send(JSON.stringify(Response));
             res.status(200).send("Check Your Emails for Due Bills");
-
-
-            var receive_queue_params = {
-                QueueUrl: 'https://sqs.us-east-1.amazonaws.com/418928218825/MyQueue1',
-                VisibilityTimeout: 0 // 0 min wait time for anyone else to process.
-            };
-            sqs.receiveMessage(receive_queue_params, function (
-                error4,
-                data2
-            ) {
-                if (error4) {
-                    console.error(error4);
-                } else {
-                    console.log(
-                        "Recived Message From Queue" + JSON.stringify(data2)
-                    );
-
-                    var params = {
-                        Message: JSON.stringify(data2) /* required */,
-                        TopicArn: 'arn:aws:sns:us-east-1:418928218825:csye62251-SNSTopic-6848RKPJ7ZZ7'
-                    };
-
-                    // Create promise and SNS service object
-                    var publishTextPromise = new AWS.SNS({
-                        apiVersion: "2010-03-31"
-                    })
-                        .publish(params)
-                        .promise();
-
-                    // Handle promise's fulfilled/rejected states
-                    publishTextPromise
-                        .then(function (data) {
-                            console.log(
-                                `Message ${params.Message} send sent to the topic ${params.TopicArn}`
-                            );
-                            console.log("MessageID is " + JSON.stringify(data));
-                        })
-                        .catch(function (err) {
-                            console.error(err, err.stack);
-                        });
-                }
-            });
 
         } catch (e) {
             res.status(400).send(e.toString());
