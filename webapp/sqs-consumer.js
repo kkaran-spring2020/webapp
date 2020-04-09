@@ -13,6 +13,7 @@ var topic_arn = process.env.SNS_ARN;
 
     app = Consumer.create({
         queueUrl: process.env.SQS_URL,
+
         handleMessage: async (message) => {
             // do some work with `message`
             console.log("Handle Message is:" +message);
