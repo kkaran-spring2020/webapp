@@ -3,9 +3,7 @@ const AWS = require('aws-sdk');
 const logg = require('./logger');
 
 AWS.config.update({
-    region: "us-east-1",
-    accessKeyId: process.env.AWS_ACCESS_KEY,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+    region: "us-east-1"
 });
 
 var topic_arn = process.env.SNS_ARN;
