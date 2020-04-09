@@ -4,8 +4,8 @@ const logg = require('./logger');
 
 AWS.config.update({
     region: "us-east-1",
-    accessKeyId: "AKIAWDCQRKLE6YKHILRV",
-    secretAccessKey: "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"
+    accessKeyId: process.env.AWS_ACCESS_KEY,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
 });
 
 var topic_arn = process.env.SNS_ARN;
