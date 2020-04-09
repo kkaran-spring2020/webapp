@@ -15,10 +15,7 @@ module.exports = function (app) {
 
   const { Bill, User, AttachFile } = require('../db');
 
-  const s3 = new AWS.S3({
-    accessKeyId: process.env.AWS_ACCESS_KEY,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-  });
+  const s3 = new AWS.S3();
 
 
   app.post('/v1/bill/:id/file', async (req, res) => {
